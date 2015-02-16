@@ -1,12 +1,12 @@
 {
-  "rec": "Recordings",  
-  "livetv": "Live TV",
-  "settings": "Settings",
-  "aired_on": "Aired on",
-  "airing": "Airing",
-  "from": "from",
-  "to": "to",
-  "error": "Error",
-  "error_net": "Could not reach the Tvheadend server due to a networking problem.",
-  "error_auth": "The Tvheadend server requires authentication or refuses connections using the provided credentials."
+    "rec": "Recordings",  
+    "livetv": "Live TV",
+    "settings": "Settings",
+    "aired_on": "Aired on",
+    "airing": "Airing",
+    "from": "from",
+    "to": "to",
+    "error": "Error",
+    "error_net": "Could not reach the Tvheadend server due to a networking problem.",
+    "error_auth": "The Tvheadend server requires authentication or refuses connections using the provided credentials."
 }
