@@ -62,7 +62,7 @@ def ValidatePrefs():
     Log.Info('Successfully connected to Tvheadend server')
 
 
-@handler(PREFIX, NAME)
+@handler(PREFIX, NAME, thumb='icon-default.png', art='art-default.png')
 def MainMenu():
     try:
         Tvheadend.ServerInfo()
@@ -233,6 +233,8 @@ def TvplexendObject(rating_key, title, summary, callback, streamCallback,
         items=[
             MediaObject(
                 optimized_for_streaming=True,
+                video_codec=VideoCodec.H264,
+                audio_codec=AudioCodec.AAC,
                 parts=[
                     PartObject(key=streamCallback)
                 ]
@@ -278,18 +280,14 @@ class Tvheadend(object):
         return Tvheadend.fetch('/api/dvr/entry/grid_finished')['entries']
 
     @staticmethod
-    def fetch(path, headers=dict(), values=dict()):
+    def fetch(path, headers=dict(), values=None):
         url = Prefs['url'] + path
 
         if 'auth' in Dict:
             headers['Authorization'] = Dict['auth']
 
         try:
-            if values:
-                return JSON.ObjectFromURL(url=url, headers=headers,
-                                          values=values)
-
-            return JSON.ObjectFromURL(url=url, headers=headers)
+            return JSON.ObjectFromURL(url=url, headers=headers, values=values)
 
         except Ex.HTTPError as e:
             Log.Error('An HTTP error occured: ' + repr(e))
