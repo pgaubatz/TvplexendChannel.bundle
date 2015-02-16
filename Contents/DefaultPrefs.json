@@ -1,0 +1,33 @@
+[
+	{
+		"id": 		"url",
+		"label": 	"URL (required)",
+		"type": 	"text",
+		"default": 	""
+	},
+	{
+		"id":		"username",
+		"label":	"Username",
+		"type": 	"text",
+		"default": 	""
+	},
+	{
+		"id": 		"password",
+		"label": 	"Password",
+		"type": 	"text",
+		"option": 	"hidden",
+		"default": 	""
+	},
+	{
+		"id": 		"displayChannelsNumbers",
+		"label": 	"Display channel numbers",
+		"type": 	"bool",
+		"default": 	"false"
+	},
+	{
+		"id": 		"displayChannelIcons",
+		"label": 	"Display channel icons",
+		"type": 	"bool",
+		"default": 	"false"
+	}
+]
