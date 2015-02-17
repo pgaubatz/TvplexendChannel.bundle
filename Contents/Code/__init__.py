@@ -1,5 +1,5 @@
 #
-# Tvplexend - A PLEX Plugin for Tvheadend
+# Tvplexend - A Tvheadend Channel Plugin for PLEX Media Server
 # Copyright (C) 2015 Patrick Gaubatz <patrick@gaubatz.at>
 #
 # This program is free software; you can redistribute it and/or modify
