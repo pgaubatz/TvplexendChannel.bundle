@@ -24,6 +24,8 @@
 
 NAME = 'Tvheadend'
 PREFIX = '/video/tvplexend'
+MIN_URL_LEN = len('http://x')
+CONTAINER = 'mpegts'
 
 
 #
@@ -36,7 +38,7 @@ def Start():
 
 
 def ValidatePrefs():
-    if not Prefs['url']:
+    if not Prefs['url'] or len(Prefs['url']) < MIN_URL_LEN:
         Log.Error('You need to provide the URL of your Tvheadend server')
         return False
 
@@ -65,28 +67,6 @@ def ValidatePrefs():
 @handler(PREFIX, NAME, thumb='icon-default.png', art='art-default.png')
 def MainMenu():
     try:
-        Tvheadend.ServerInfo()
-
-    except TvplexendException as e:
-        return ObjectContainer(header=L('error'), message=str(e))
-
-    return ObjectContainer(
-        objects=[
-            DirectoryObject(key=Callback(ChannelList), title=L('livetv')),
-            DirectoryObject(key=Callback(RecordingList), title=L('rec')),
-            PrefsObject(title=L('settings'))
-        ]
-    )
-
-
-#
-# Live TV
-#
-
-
-@route(PREFIX + '/channels')
-def ChannelList():
-    try:
         oc = ObjectContainer(title2=L('livetv'))
 
         channels = Tvheadend.Channels()
@@ -108,7 +88,7 @@ def ChannelList():
         return ObjectContainer(header=L('error'), message=str(e))
 
 
-@route(PREFIX + '/channels/{channelId}')
+@route(PREFIX + '/{channelId}')
 def Channel(channelId, container=False):
     channel = Dict['channels'][channelId]
     epg = Dict['epg'][channelId] if channelId in Dict['epg'] else dict()
@@ -117,7 +97,6 @@ def Channel(channelId, container=False):
     summary = ''
     tagline = None
     thumb = None
-    duration = None
 
     if Client.Platform == ClientPlatform.Android and 'title' in epg:
         title = '%s (%s)' % (title, epg['title'])
@@ -136,125 +115,58 @@ def Channel(channelId, container=False):
         thumb = Prefs['url'] + '/' + channel['icon_public_url']
 
     if 'start' in epg and 'stop' in epg:
-        start = Datetime.FromTimestamp(epg['start']).strftime('%H:%M')
-        stop = Datetime.FromTimestamp(epg['stop']).strftime('%H:%M')
-        summary = '- %s %s %s %s %s\n\n%s' % (
-            L('airing'), L('from'), start, L('to'), stop, summary
-        )
-        duration = (epg['stop'] - epg['start']) * 1000
+        startDateTime = Datetime.FromTimestamp(epg['start'])
+        start = startDateTime.strftime('%H:%M')
 
-    return TvplexendObject(
-        rating_key=PREFIX + '/channels/' + channelId,
+        stop = Datetime.FromTimestamp(epg['stop']).strftime('%H:%M')
+
+        duration = (epg['stop'] - epg['start']) / 60
+
+        progress = (Datetime.Now() - startDateTime).total_seconds() / 60
+        relProgress = (progress / duration) * 100
+
+        summary = '%s - %s (%i min) ★ %i%% ★ %s ★ %s' % (
+            start, stop, duration, relProgress, epg['title'], summary
+        )
+
+
+    vco = VideoClipObject(
+        key=Callback(Channel, channelId=channelId, container=True),
+        rating_key=PREFIX + '/' + channelId,
         title=title,
         summary=summary,
         tagline=tagline,
         thumb=thumb,
-        duration=duration,
-        callback=Callback(Channel, channelId=channelId, container=True),
-        streamCallback=Callback(StreamChannel, channelId=channelId),
-        container=container
-    )
-
-
-@route(PREFIX + '/channels/{channelId}/livestream')
-def StreamChannel(channelId):
-    return Redirect(Prefs['url'] + '/stream/channel/' + channelId)
-
-
-#
-# Recordings
-#
-
-
-@route(PREFIX + '/recordings')
-def RecordingList():
-    try:
-        oc = ObjectContainer(title2=L('rec'))
-
-        Dict['recordings'] = dict()
-
-        for recording in Tvheadend.Recordings():
-            id = recording['uuid']
-            Dict['recordings'][id] = recording
-            oc.add(Recording(recId=id))
-
-        return oc
-
-    except TvplexendException as e:
-        return ObjectContainer(header=L('error'), message=str(e))
-
-
-@route(PREFIX + '/recordings/{recId}')
-def Recording(recId, container=False):
-    recording = Dict['recordings'][recId]
-
-    startDateTime = Datetime.FromTimestamp(recording['start'])
-    stopDateTime = Datetime.FromTimestamp(recording['stop'])
-
-    day = startDateTime.strftime('%d.%m.%Y')
-    start = startDateTime.strftime('%H:%M')
-    stop = stopDateTime.strftime('%H:%M')
-
-    summary = '- %s\n- %s %s %s %s %s %s\n\n%s' % (
-        recording['channelname'],
-        L('aired_on'), day, L('from'), start, L('to'), stop,
-        recording['disp_description']
-    )
-
-    return TvplexendObject(
-        rating_key=PREFIX + '/recordings/' + recId,
-        title=recording['disp_title'],
-        summary=summary,
-        tagline=recording['channelname'],
-        duration=recording['duration'] * 1000,
-        callback=Callback(Recording, recId=recId, container=True),
-        streamCallback=Callback(StreamRecording, recId=recId),
-        container=container
-    )
-
-
-@route(PREFIX + '/recordings/{recId}/stream')
-def StreamRecording(recId):
-    return Redirect(Prefs['url'] + '/dvrfile/' + recId)
-
-
-#
-# Utilities
-#
-
-def TvplexendObject(rating_key, title, summary, callback, streamCallback,
-                    container, tagline=None, duration=None, thumb=None):
-
-    vco = VideoClipObject(
-        key=callback,
-        rating_key=rating_key,
-        title=title,
-        summary=summary,
         items=[
             MediaObject(
                 optimized_for_streaming=True,
                 video_codec=VideoCodec.H264,
                 audio_codec=AudioCodec.AAC,
+                container=CONTAINER,
                 parts=[
-                    PartObject(key=streamCallback)
+                    PartObject(
+                        key=Callback(StreamChannel, channelId=channelId)
+                    )
                 ]
             )
         ]
     )
 
-    if tagline:
-        vco.tagline = tagline
-
-    if duration:
-        vco.duration = duration
-
-    if thumb:
-        vco.thumb = thumb
-
     if container:
         return ObjectContainer(objects=[vco])
 
     return vco
+
+
+@route(PREFIX + '/{channelId}/livestream')
+def StreamChannel(channelId):
+    url = '%s/stream/channel/%s?profile=pass' % (Prefs['url'], channelId)
+    return Redirect(url)
+
+
+#
+# Utilities
+#
 
 
 class Tvheadend(object):
@@ -274,10 +186,6 @@ class Tvheadend(object):
             values=dict(start=0, limit=channelCount)
         )['entries']
         return dict((channel['channelUuid'], channel) for channel in entries)
-
-    @staticmethod
-    def Recordings():
-        return Tvheadend.fetch('/api/dvr/entry/grid_finished')['entries']
 
     @staticmethod
     def fetch(path, headers=dict(), values=None):
