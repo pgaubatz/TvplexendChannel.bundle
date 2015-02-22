@@ -2,7 +2,7 @@
 <plist version="1.0">
     <dict>
         <key>CFBundleIdentifier</key>
-        <string>at.gaubatz.patrick.tvplexend</string>
+        <string>at.gaubatz.patrick.tvplexend.channel</string>
         <key>PlexClientPlatformExclusions</key>
         <string></string>
         <key>PlexClientPlatforms</key>
