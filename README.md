@@ -11,3 +11,8 @@ Instructions
 2. A new channel (i.e., *Tvheadend*) will be displayed in Plex' Web Interface (e.g., [http://plex.local:32400/web/index.html](http://plex.local:32400/web/index.html)).
 3. Configure the Tvheadend channel by clicking the ![settings](http://cdn-img.easyicon.net/png/10734/1073494.png) icon.
 4. Enjoy live TV!
+
+See Also
+--------
+
+You might also want to check out the corresponding **metadata agent plugin**: [TvplexendAgent.bundle](https://github.com/pgaubatz/TvplexendAgent.bundle).
