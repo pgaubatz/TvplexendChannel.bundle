@@ -17,6 +17,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+
+from urlparse import urlparse, urlunparse
+
+
 #
 # Constants
 #
@@ -42,10 +46,15 @@ def ValidatePrefs():
         Log.Error('You need to provide the URL of your Tvheadend server')
         return False
 
+    Dict['stream_url'] = Prefs['url']
     if Prefs['username'] and Prefs['password']:
         u = Prefs['username']
         p = Prefs['password']
         Dict['auth'] = 'Basic ' + String.Encode(u + ':' + p).replace('_', '=')
+
+        url = urlparse(Prefs['url'])
+        netloc = '%s:%s@%s' % (u, p, url.netloc)
+        Dict['stream_url'] = urlunparse((url.scheme, netloc, url.path, None, None, None))
 
     try:
         info = Tvheadend.ServerInfo()
@@ -160,7 +169,7 @@ def Channel(channelId, container=False):
 
 @route(PREFIX + '/{channelId}/livestream')
 def StreamChannel(channelId):
-    url = '%s/stream/channel/%s?profile=pass' % (Prefs['url'], channelId)
+    url = '%s/stream/channel/%s?profile=pass' % (Dict['stream_url'], channelId)
     return Redirect(url)
 
 
