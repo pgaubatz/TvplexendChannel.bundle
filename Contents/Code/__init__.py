@@ -46,7 +46,9 @@ def ValidatePrefs():
         Log.Error('You need to provide the URL of your Tvheadend server')
         return False
 
+    Dict['auth'] = None
     Dict['stream_url'] = Prefs['url']
+
     if Prefs['username'] and Prefs['password']:
         u = Prefs['username']
         p = Prefs['password']
