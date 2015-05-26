@@ -18,6 +18,8 @@
 #
 
 
+import base64
+
 from urlparse import urlparse, urlunparse
 
 
@@ -52,7 +54,7 @@ def ValidatePrefs():
     if Prefs['username'] and Prefs['password']:
         u = Prefs['username']
         p = Prefs['password']
-        Dict['auth'] = 'Basic ' + String.Encode(u + ':' + p).replace('_', '=')
+        Dict['auth'] = 'Basic ' + base64.b64encode(u + ':' + p)
 
         url = urlparse(Prefs['url'])
         netloc = '%s:%s@%s' % (u, p, url.netloc)
