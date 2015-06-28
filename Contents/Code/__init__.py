@@ -32,6 +32,8 @@ NAME = 'Tvheadend'
 PREFIX = '/video/tvplexend'
 MIN_URL_LEN = len('http://x')
 CONTAINER = 'mpegts'
+DURATION = 6*60*60*1000 # 6 hours seem to work...
+DURATION_ADDED = 15*60 # add 15 minutes to duration
 
 
 #
@@ -110,6 +112,7 @@ def Channel(channelId, container=False):
     summary = ''
     tagline = None
     thumb = None
+    remaining_duration = DURATION
 
     if Client.Platform == ClientPlatform.Android and 'title' in epg:
         title = '%s (%s)' % (title, epg['title'])
@@ -126,6 +129,9 @@ def Channel(channelId, container=False):
 
     if Prefs['displayChannelIcons'] and 'icon_public_url' in channel:
         thumb = Prefs['url'] + '/' + channel['icon_public_url']
+
+    if 'stop' in epg:
+        remaining_duration = (epg['stop'] - int(Datetime.TimestampFromDatetime(Datetime.Now())) + DURATION_ADDED) * 1000
 
     if 'start' in epg and 'stop' in epg:
         startDateTime = Datetime.FromTimestamp(epg['start'])
@@ -150,11 +156,10 @@ def Channel(channelId, container=False):
         summary=summary,
         tagline=tagline,
         thumb=thumb,
+        duration=remaining_duration, # at least the android client needs a duration to work properly...
         items=[
             MediaObject(
                 optimized_for_streaming=True,
-                video_codec=VideoCodec.H264,
-                audio_codec=AudioCodec.AAC,
                 container=CONTAINER,
                 parts=[
                     PartObject(
