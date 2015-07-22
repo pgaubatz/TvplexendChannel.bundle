@@ -51,7 +51,7 @@ def ValidatePrefs():
         return False
 
     Dict['auth'] = None
-    Dict['stream_url'] = Prefs['url']
+    Dict['url'] = Prefs['url']
 
     if Prefs['username'] and Prefs['password']:
         u = Prefs['username']
@@ -60,7 +60,7 @@ def ValidatePrefs():
 
         url = urlparse(Prefs['url'])
         netloc = '%s:%s@%s' % (u, p, url.netloc)
-        Dict['stream_url'] = urlunparse((url.scheme, netloc, url.path, None, None, None))
+        Dict['url'] = urlunparse((url.scheme, netloc, url.path, None, None, None))
 
     try:
         info = Tvheadend.ServerInfo()
@@ -128,7 +128,7 @@ def Channel(channelId, container=False):
         tagline = epg['title']
 
     if Prefs['displayChannelIcons'] and 'icon_public_url' in channel:
-        thumb = Prefs['url'] + '/' + channel['icon_public_url']
+        thumb = Dict['url'] + '/' + channel['icon_public_url']
 
     if 'stop' in epg:
         remaining_duration = (epg['stop'] - int(Datetime.TimestampFromDatetime(Datetime.Now())) + DURATION_ADDED) * 1000
@@ -178,7 +178,7 @@ def Channel(channelId, container=False):
 
 @route(PREFIX + '/{channelId}/livestream')
 def StreamChannel(channelId):
-    url = '%s/stream/channel/%s?profile=pass' % (Dict['stream_url'], channelId)
+    url = '%s/stream/channel/%s?profile=pass' % (Dict['url'], channelId)
     return Redirect(url)
 
 
